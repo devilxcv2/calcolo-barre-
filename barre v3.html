@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcolatrice di barre</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 10px;
+            background-color: #fff;
+            box-shadow: 0 4px 4px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            color: #333;
+        }
+        input, button {
+            display: block;
+            padding: 8px;
+            font-size: 14px;
+            width: 100%;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        button {
+            width: auto;
+            background-color: #007bff;
+            border: none;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            cursor: pointer;
+            transition-duration: 0.4s;
+        }
+        button:hover {
+            background-color: #0056b3;
+            color: white;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #ddd;
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #riepilogo, #riepilogo * {
+                visibility: visible;
+            }
+            #riepilogo {
+                position: absolute;
+                left: 0;
+                top: 0;
+            }
+            button {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Calcolatore di barre Din </h1>
+    <label for="numBarre">Numero di barre:</label>
+    <input type="number" id="numBarre" min="0" step="1">
+    <br>
+    <label for="dimensione">Dimensione (mm):</label>
+    <input type="number" id="dimensione" min="0" step="1">
+    <br>
+    <button onclick="aggiungiRiga()">Aggiungi riga</button>
+    <br>
+    <h2>Riepilogo</h2>
+    <table id="riepilogo">
+        <thead>
+            <tr>
+                <th>Numero di barre</th>
+                <th>Dimensione (mm)</th>
+                <th>Barre da 2 metri</th>
+                <th>Metri totali</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="2" style="text-align: right"><strong>Totale:</strong></td>
+                <td id="totaleBarre2Metri">0</td>
+                <td id="totaleMetri">0</td>
+            </tr>
+        </tfoot>
+    </table>
+
+   <script>
+    function aggiornaRiga(e) {
+        const cellaModificata = e.target;
+        const riga = cellaModificata.parentElement;
+        const numBarre = parseInt(riga.cells[0].innerText, 10);
+        const dimensione = parseInt(riga.cells[1].innerText, 10);
+
+        if (!isNaN(numBarre) && !isNaN(dimensione)) {
+            const lunghezzaTotale = numBarre * dimensione;
+            const barre2Metri = Math.ceil(lunghezzaTotale / 2000);
+            const metriNecessari = lunghezzaTotale / 1000;
+
+            riga.cells[2].innerText = barre2Metri;
+            riga.cells[3].innerText = metriNecessari;
+        } else {
+            alert("Per favore, inserisci valori validi.");
+        }
+		aggiornaTotali();
+    }
+
+    function cancellaRiga(e) {
+        const riga = e.target.parentElement.parentElement;
+        riga.remove();
+		aggiornaTotali();
+    }
+
+    function aggiungiRiga() {
+    const numBarre = document.getElementById("numBarre").value;
+    const dimensione = document.getElementById("dimensione").value;
+
+    if (numBarre && dimensione) {
+        const lunghezzaTotale = numBarre * dimensione;
+        const barre2Metri = Math.ceil(lunghezzaTotale / 2000);
+        const metriNecessari = lunghezzaTotale / 1000;
+
+        const tabella = document.getElementById("riepilogo").getElementsByTagName("tbody")[0];
+        const nuovaRiga = tabella.insertRow();
+
+        const numBarreCell = nuovaRiga.insertCell();
+        numBarreCell.contentEditable = "true";
+        numBarreCell.innerText = numBarre;
+        numBarreCell.addEventListener("input", aggiornaRiga);
+
+        const dimensioneCell = nuovaRiga.insertCell();
+        dimensioneCell.contentEditable = "true";
+        dimensioneCell.innerText = dimensione;
+        dimensioneCell.addEventListener("input", aggiornaRiga);
+
+        const barre2MetriCell = nuovaRiga.insertCell();
+        barre2MetriCell.innerText = barre2Metri;
+
+        const metriNecessariCell = nuovaRiga.insertCell();
+        metriNecessariCell.innerText = metriNecessari;
+
+        // Aggiungo una cella con il pulsante "Cancella"
+        const cancellaCell = nuovaRiga.insertCell();
+        const cancellaButton = document.createElement("button");
+        cancellaButton.innerText = "Cancella";
+        cancellaButton.onclick = cancellaRiga;
+        cancellaCell.appendChild(cancellaButton);
+
+        // Svuota i campi di input
+        document.getElementById("numBarre").value = "";
+        document.getElementById("dimensione").value = "";
+    } else {
+        alert("Per favore, inserisci tutti i valori richiesti.");
+    }
+	aggiornaTotali();
+}
+	function aggiornaTotali() {
+            const tabella = document.getElementById("riepilogo");
+            const righe = tabella.rows;
+            let totaleBarre2Metri = 0;
+            let totaleMetri = 0;
+
+            for (let i = 1; i < righe.length - 1; i++) {
+                const riga = righe[i];
+                totaleBarre2Metri += parseInt(riga.cells[2].innerText, 10);
+                totaleMetri += parseFloat(riga.cells[3].innerText);
+            }
+
+            document.getElementById("totaleBarre2Metri").innerText = totaleBarre2Metri;
+            document.getElementById("totaleMetri").innerText = totaleMetri.toFixed(2);
+        }
+
+        
+		
+		 
+</script>
+
+</body>
+</html>
